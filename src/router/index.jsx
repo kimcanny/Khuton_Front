@@ -1,8 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import Dashboard from '../pages/Dashboard';
-import Reports from '../pages/Reports';
-import Analytics from '../pages/Analytics';
+import HomePage from '../pages/HomePage';
+import MovieDetailPage from '../pages/MovieDetailPage';
+import WatchPage from '../pages/WatchPage';
+import FeedbackPage from '../pages/FeedbackPage';
+import CreatorProfilePage from '../pages/CreatorProfilePage';
+import UserMyPage from '../pages/UserMyPage';
+import UploadPage from '../pages/UploadPage';
 import NotFound from '../pages/NotFound';
 
 /**
@@ -16,15 +20,31 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <HomePage />,
       },
       {
-        path: 'reports',
-        element: <Reports />,
+        path: 'movies/:movieId',
+        element: <MovieDetailPage />,
       },
       {
-        path: 'analytics',
-        element: <Analytics />,
+        path: 'movies/:movieId/watch',
+        element: <WatchPage />,
+      },
+      {
+        path: 'movies/:movieId/feedback',
+        element: <FeedbackPage />,
+      },
+      {
+        path: 'creators/:creatorId',
+        element: <CreatorProfilePage />,
+      },
+      {
+        path: 'mypage',
+        element: <UserMyPage />,
+      },
+      {
+        path: 'upload',
+        element: <UploadPage />,
       },
       {
         path: '*',
