@@ -1,88 +1,206 @@
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { movies } from "../data/movies";
 import NotFound from "./NotFound";
+import movieVideo from "../assets/movie.mp4";
 
 const WatchPage = () => {
   const { movieId } = useParams();
   const navigate = useNavigate();
   const movie = movies.find(m => m.id === parseInt(movieId));
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [movieId]);
+
+  const videoRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleProgressClick = (e) => {
+    if (videoRef.current && duration > 0) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const clickedPercent = x / rect.width;
+      const newTime = clickedPercent * duration;
+      videoRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   if (!movie) return <NotFound />;
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white">
-      {/* Cinematic Player Header */}
-      <div className="bg-[#0a0a0a] border-b border-white/5 px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <button onClick={() => navigate(-1)} className="text-zinc-500 hover:text-white transition text-xl">✕</button>
-          <div className="space-y-0.5">
-            <h1 className="text-sm font-black tracking-tight">{movie.title}</h1>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{movie.director} 감독 • {movie.genres[0]}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-           <Link to={`/movies/${movie.id}/feedback`} className="px-4 py-2 bg-amber-500 text-black text-[11px] font-black rounded-lg hover:bg-amber-400 transition">
-             LEAVE FEEDBACK
-           </Link>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] h-[calc(100vh-69px)]">
-        {/* Player Area */}
-        <div className="relative bg-black flex items-center justify-center overflow-hidden">
-          <img src={movie.stillImage} alt="Movie Still" className="w-full h-full object-cover opacity-50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          
-          {/* Mock Playback UI */}
-          <div className="absolute inset-0 flex flex-col justify-between p-8">
-            <div className="flex justify-end">
-               <span className="px-2 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded text-[10px] font-bold">1080P HD</span>
-            </div>
-            
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-center">
-                <button className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-4xl hover:scale-110 transition">▶</button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden cursor-pointer group">
-                   <div className="h-full bg-amber-500 w-[35%] group-hover:bg-amber-400 transition-all relative">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
-                   </div>
-                </div>
-                <div className="flex items-center justify-between text-[11px] font-black text-zinc-500 uppercase tracking-widest">
-                  <span>14:22 / 42:10</span>
-                  <div className="flex gap-6">
-                    <button className="hover:text-white transition">Subtitles</button>
-                    <button className="hover:text-white transition">Settings</button>
-                    <button className="hover:text-white transition">Fullscreen</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <main className="flex flex-col min-h-screen bg-white text-black font-sans overflow-x-hidden">
+      {/* 1. Full Viewport Video Section */}
+      <section className="relative w-full h-screen shrink-0 bg-black overflow-hidden group">
+        {/* Overlaid Top Header */}
+        <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-8 bg-gradient-to-b from-black/60 to-transparent">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-white hover:scale-110 transition p-2"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+          </button>
+          <button className="text-white hover:scale-110 transition p-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+          </button>
         </div>
 
-        {/* Sidebar: Commentary / Comments */}
-        <div className="bg-[#0a0a0a] border-l border-white/5 flex flex-col">
-          <div className="p-6 border-b border-white/5">
-             <h2 className="text-xs font-black uppercase tracking-widest text-amber-500">Live Commentary</h2>
+        {/* Video Background */}
+        {/* Video or Image Background */}
+        {movie.title === "소란스러운 밤" ? (
+          <video
+            ref={videoRef}
+            src={movieVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            className="w-full h-full object-cover opacity-80"
+          />
+        ) : (
+          <img
+            src={movie.stillImage}
+            alt="Movie Still"
+            className="w-full h-full object-cover opacity-80"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+        {/* Playback Controls Overlay */}
+        <div className="absolute bottom-12 left-0 right-0 px-12 space-y-6">
+          {/* Progress Bar */}
+          <div 
+            className="relative h-1.5 w-full bg-white/20 rounded-full cursor-pointer group"
+            onClick={handleProgressClick}
+          >
+            <div 
+              className="absolute h-full bg-red-600 rounded-full" 
+              style={{ width: `${progressPercent}%` }} 
+            />
+            <div 
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-xl -ml-2" 
+              style={{ left: `${progressPercent}%` }}
+            />
           </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-             <CommentaryItem time="04:12" user="이지후 감독" text="이 장면은 실제 새벽 3시에 가로등 아래에서 촬영되었습니다. 인공적인 조명을 최대한 배제했죠." isDirector />
-             <CommentaryItem time="08:45" user="김영화" text="색감이 너무 예뻐요. 필터 사용하신 건가요?" />
-             <CommentaryItem time="12:20" user="박평론" text="숏의 구도가 굉장히 인상적입니다. 감정선이 잘 느껴지네요." />
-             <CommentaryItem time="14:02" user="이지후 감독" text="방금 지나간 그림자는 의도된 연출입니다. 주인공의 불안함을 상징하죠." isDirector />
+        </div>
+      </section>
+
+      {/* 2. Scrollable Content Area */}
+      <div className="max-w-7xl mx-auto px-8 py-16">
+        {/* Movie Summary Header */}
+        <div className="flex justify-between items-start mb-12">
+          <div className="space-y-4">
+            <h1 className="text-3xl font-black tracking-tight text-zinc-900">{movie.title}</h1>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-zinc-200 rounded-full overflow-hidden">
+                <div className="w-full h-full bg-zinc-300" />
+              </div>
+              <div className="text-sm">
+                <p className="font-bold text-zinc-500">{movie.director} 이름 / {movie.team} 이름</p>
+              </div>
+            </div>
           </div>
-          <div className="p-6 border-t border-white/5">
-             <div className="relative">
-                <input 
-                  type="text" 
-                  placeholder="장면 리액션 남기기..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs outline-none focus:border-amber-500/50 transition-all"
-                />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-500 text-xs font-black">SEND</button>
-             </div>
+          <div className="text-right space-y-2">
+            <div className="flex gap-1 justify-end">
+              {[1, 2, 3, 4, 5].map(i => (
+                <svg key={i} width="32" height="32" viewBox="0 0 24 24" fill={i <= 4 ? "#FBBF24" : "none"} stroke="#FBBF24" strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-zinc-400">평점 {movie.rating} / {movie.ratingCount}명 평가</p>
+          </div>
+        </div>
+
+        {/* Review Input Section */}
+        <div className="bg-zinc-200 p-10 rounded-lg mb-16 text-zinc-500 font-bold text-lg">
+          작품에 대한 평가를 남겨보세요
+        </div>
+
+        {/* Detail Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
+          {/* Left: Community & Reviews */}
+          <div className="space-y-8">
+            {/* Regular Review & Reply */}
+            <div className="space-y-4">
+              <div className="bg-zinc-200 p-6 rounded-lg relative">
+                <p className="font-bold text-zinc-700">&lt;{movie.director}&gt; 영화에는 감동이 있다</p>
+                <span className="absolute bottom-4 right-6 text-xs font-bold text-zinc-500">김아무개</span>
+              </div>
+              <div className="flex justify-end">
+                <div className="bg-zinc-300 p-6 rounded-lg w-[85%] relative">
+                  <p className="font-bold text-zinc-700">감사합니다</p>
+                  <span className="absolute bottom-4 right-6 text-xs font-bold text-zinc-500">{movie.director}👑</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Donation Review */}
+            <div className="bg-red-100 border-red-200 p-8 rounded-lg relative space-y-4">
+              <div className="text-red-500 font-black text-xl flex items-center gap-2">
+                500,000,000 ₩ <span className="text-sm">₩</span>
+              </div>
+              <p className="font-bold text-zinc-700 leading-relaxed pr-20">
+                영화를 보니 연출이 정말 좋았다는 생각을 하게 되네요. <br />
+                어떻게 저렇게 창의적인 연출을?ㄷㄷㄷ <br />
+                영화 많이 만들어주세요~~~.
+              </p>
+              <span className="absolute bottom-6 right-8 text-xs font-bold text-zinc-500 flex items-center gap-1">
+                김규현 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
+              </span>
+            </div>
+
+            {/* Spoiler Review */}
+            <div className="bg-zinc-200 p-6 rounded-lg relative">
+              <p className="font-bold text-zinc-400 blur-[4px] select-none">
+                나는 스포일러 맨 이 영화에서 감독은 죽는다
+              </p>
+              <div className="absolute inset-0 flex items-center justify-center font-black text-zinc-600">
+                (스포일러)
+              </div>
+              <span className="absolute bottom-4 right-6 text-[10px] font-bold text-zinc-400">지욱이형이포함됨</span>
+            </div>
+          </div>
+
+          {/* Right: Sidebar */}
+          <div className="space-y-12">
+            {/* Director's Word */}
+            <div className="bg-zinc-200 p-8 rounded-lg space-y-6">
+              <div className="inline-block bg-white px-4 py-1 rounded text-xs font-black text-zinc-900">
+                감독의 한마디
+              </div>
+              <p className="text-sm font-bold text-zinc-600 leading-relaxed">
+                무환경, 사회문제를 비롯한 다양성 영화의 경우 <br />
+                관객을 찾아가기가 쉽지 않은 현실에서 무비블록은 <br />
+                창작자에게 많은 기회와 의욕을 줄 수 있는 멋진 서비스다.
+              </p>
+            </div>
+
+            {/* Ad Section */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-zinc-400 text-right uppercase tracking-tighter">
+                수익의 일부는 영화 제작 지원에 사용됩니다
+              </p>
+              <div className="bg-zinc-200 aspect-[4/3] rounded-lg flex items-center justify-center">
+                <span className="font-bold text-zinc-400 text-xl tracking-widest">광고</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -90,16 +208,5 @@ const WatchPage = () => {
   );
 };
 
-const CommentaryItem = ({ time, user, text, isDirector }) => (
-  <div className="space-y-1">
-    <div className="flex items-center gap-2">
-      <span className="text-[10px] font-black text-amber-500 font-mono">[{time}]</span>
-      <span className={`text-[11px] font-black ${isDirector ? 'text-white' : 'text-zinc-500'} uppercase tracking-wider`}>
-        {user} {isDirector && <span className="text-[9px] bg-amber-500 text-black px-1 rounded ml-1">DIRECTOR</span>}
-      </span>
-    </div>
-    <p className="text-[12px] text-zinc-400 leading-relaxed font-medium">{text}</p>
-  </div>
-);
-
 export default WatchPage;
+
