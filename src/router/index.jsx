@@ -16,6 +16,10 @@ import NotFound from '../pages/NotFound';
  */
 export const router = createBrowserRouter([
   {
+    path: 'movies/:movieId/watch',
+    element: <WatchPage />,
+  },
+  {
     path: '/',
     element: <MainLayout />,
     children: [
@@ -26,10 +30,6 @@ export const router = createBrowserRouter([
       {
         path: 'movies/:movieId',
         element: <MovieDetailPage />,
-      },
-      {
-        path: 'movies/:movieId/watch',
-        element: <WatchPage />,
       },
       {
         path: 'movies/:movieId/feedback',
@@ -58,3 +58,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
